@@ -4,6 +4,7 @@ import com.liquidsoftware.order.domain.Address;
 import com.liquidsoftware.order.domain.BillingAmount;
 import com.liquidsoftware.order.domain.CustomerInfo;
 import com.liquidsoftware.order.domain.OrderId;
+import com.liquidsoftware.order.domain.publictypes.PricedOrderLine;
 import io.vavr.collection.List;
 import org.derive4j.ArgOption;
 import org.derive4j.Data;
@@ -18,7 +19,7 @@ public interface PricedOrder {
             Address shippingAddress,
             Address billingAddress,
             BillingAmount amountToBill,
-            List<ValidatedOrderLine> lines,
+            List<PricedOrderLine> lines,
             PricingMethod pricingMethod
         );
     }

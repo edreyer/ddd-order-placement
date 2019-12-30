@@ -1,6 +1,7 @@
 package com.liquidsoftware.order.domain;
 
 import com.liquidsoftware.order.domain.simpletypes.ValidationError;
+import io.vavr.collection.List;
 import io.vavr.control.Either;
 import org.derive4j.ArgOption;
 import org.derive4j.Data;
@@ -27,6 +28,16 @@ public abstract class BillingAmount {
     static Either<ValidationError, BillingAmount> create(double billingAmount) {
         return createDouble("billingAmount", billingAmount, 0, 10000)
             .map(ba -> BillingAmounts.billingAmount0(ba));
+    }
+
+    @ExportAsPublic
+    static Either<ValidationError, BillingAmount> sumPrices(List<Price> prices) {
+        return prices.foldLeft(
+            Prices.create(0),
+            (a, b) -> a.flatMap(price -> price.plus(b))
+        ).flatMap(total ->
+            create(Prices.getPrice(total))
+        );
     }
 
 }

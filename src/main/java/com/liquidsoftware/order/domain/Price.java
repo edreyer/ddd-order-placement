@@ -38,4 +38,8 @@ public abstract class Price {
         return Price.create(Prices.getPrice(this) * p);
     }
 
+    public Either<ValidationError, Price> plus(Price p) {
+        return Price.create(Prices.getPrice(this) + Prices.getPrice(p));
+    }
+
 }
