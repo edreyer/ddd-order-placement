@@ -6,6 +6,7 @@ import org.derive4j.Data;
 public interface PlaceOrderEvent {
 
     interface Cases<R> {
+        R orderPlaced(OrderPlaced OrderPlaced);
         R shippableOrderPlaced(ShippableOrderPlaced shippableOrderPlaced);
         R billableOrderPlaced(BillableOrderPlaced billableOrderPlaced);
         R acknowledgementSent(OrderAcknowledgmentSent orderAcknowledgmentSent);

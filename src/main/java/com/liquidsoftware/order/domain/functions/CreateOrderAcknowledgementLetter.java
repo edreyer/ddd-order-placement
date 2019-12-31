@@ -1,4 +1,4 @@
-package com.liquidsoftware.order.domain.internaltypes.functions;
+package com.liquidsoftware.order.domain.functions;
 
 import com.liquidsoftware.order.domain.internaltypes.HtmlString;
 import com.liquidsoftware.order.domain.internaltypes.PricedOrder;

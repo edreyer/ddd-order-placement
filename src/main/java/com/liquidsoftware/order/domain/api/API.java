@@ -1,7 +1,7 @@
 package com.liquidsoftware.order.domain.api;
 
-import com.liquidsoftware.order.domain.internaltypes.functions.CheckAddressExists;
-import com.liquidsoftware.order.domain.internaltypes.functions.CheckProductCodeExists;
+import com.liquidsoftware.order.domain.functions.CheckAddressExists;
+import com.liquidsoftware.order.domain.functions.CheckProductCodeExists;
 import io.vavr.control.Either;
 
 import static com.liquidsoftware.order.domain.internaltypes.CheckedAddresses.checkedAddress;
