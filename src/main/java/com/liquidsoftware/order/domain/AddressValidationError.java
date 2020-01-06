@@ -1,4 +1,4 @@
-package com.liquidsoftware.order.domain.internaltypes;
+package com.liquidsoftware.order.domain;
 
 import org.derive4j.Data;
 

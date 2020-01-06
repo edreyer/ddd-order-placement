@@ -1,7 +1,7 @@
 package com.liquidsoftware.order.domain.publictypes;
 
 import com.liquidsoftware.order.domain.OrderId;
-import com.liquidsoftware.order.domain.simpletypes.EmailAddress;
+import com.liquidsoftware.order.domain.EmailAddress;
 import org.derive4j.ArgOption;
 import org.derive4j.Data;
 

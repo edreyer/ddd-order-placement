@@ -15,7 +15,7 @@ public interface PricedOrderLine {
             OrderLineId orderLineId,
             ProductCode productCode,
             OrderQuantity quantity,
-            Price price
+            Price linePrice
         );
     }
 

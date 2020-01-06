@@ -1,4 +1,4 @@
-package com.liquidsoftware.order.domain.simpletypes;
+package com.liquidsoftware.order.domain;
 
 import org.derive4j.ArgOption;
 import org.derive4j.Data;

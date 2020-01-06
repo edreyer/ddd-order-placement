@@ -1,11 +1,12 @@
 package com.liquidsoftware.order.domain.simpletypes;
 
+import com.liquidsoftware.order.domain.ValidationError;
 import io.vavr.control.Either;
 import io.vavr.control.Option;
 
 import java.util.regex.Pattern;
 
-import static com.liquidsoftware.order.domain.simpletypes.ValidationErrors.validationError;
+import static com.liquidsoftware.order.domain.ValidationErrors.validationError;
 import static java.lang.String.format;
 
 public final class ConstrainedTypes {

@@ -1,5 +1,6 @@
-package com.liquidsoftware.order.domain.simpletypes;
+package com.liquidsoftware.order.domain;
 
+import com.liquidsoftware.order.domain.simpletypes.ConstrainedTypes;
 import io.vavr.control.Either;
 import org.derive4j.Data;
 import org.derive4j.Derive;

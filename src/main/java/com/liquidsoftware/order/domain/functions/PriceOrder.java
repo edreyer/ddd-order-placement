@@ -5,22 +5,23 @@ import com.liquidsoftware.order.domain.BillingAmounts;
 import com.liquidsoftware.order.domain.KilogramQuantities;
 import com.liquidsoftware.order.domain.OrderQuantities;
 import com.liquidsoftware.order.domain.Price;
+import com.liquidsoftware.order.domain.PricedOrders;
 import com.liquidsoftware.order.domain.UnitQuantities;
-import com.liquidsoftware.order.domain.internaltypes.PricedOrder;
-import com.liquidsoftware.order.domain.internaltypes.PricedOrders;
-import com.liquidsoftware.order.domain.internaltypes.ValidatedOrder;
-import com.liquidsoftware.order.domain.internaltypes.ValidatedOrderLine;
-import com.liquidsoftware.order.domain.internaltypes.ValidatedOrderLines;
-import com.liquidsoftware.order.domain.internaltypes.ValidatedOrders;
+import com.liquidsoftware.order.domain.ValidatedOrderLines;
+import com.liquidsoftware.order.domain.ValidatedOrders;
+import com.liquidsoftware.order.domain.ValidationError;
+import com.liquidsoftware.order.domain.PricedOrder;
+import com.liquidsoftware.order.domain.ValidatedOrder;
+import com.liquidsoftware.order.domain.ValidatedOrderLine;
 import com.liquidsoftware.order.domain.publictypes.PricedOrderLine;
 import com.liquidsoftware.order.domain.publictypes.PricedOrderLines;
 import com.liquidsoftware.order.domain.publictypes.PricingError;
 import com.liquidsoftware.order.domain.publictypes.PricingErrors;
-import com.liquidsoftware.order.domain.simpletypes.ValidationError;
-import com.liquidsoftware.order.domain.simpletypes.ValidationErrors;
 import io.vavr.Function2;
 import io.vavr.collection.List;
 import io.vavr.control.Either;
+
+import static com.liquidsoftware.order.domain.ValidationErrors.getValidationError;
 
 public interface PriceOrder
     extends Function2<GetProductPrice, ValidatedOrder, Either<PricingError, PricedOrder>> {
@@ -31,14 +32,14 @@ public interface PriceOrder
             Either.sequenceRight(ValidatedOrders.getLines(validatedOrder)
                 .map(line -> toPricedOrderLine(getProductPrice, line)))
             .map(seq -> seq.toList())
-            .mapLeft(ve -> PricingErrors.pricingError(ValidationErrors.getValidationError(ve)));
+            .mapLeft(ve -> PricingErrors.pricingError(getValidationError(ve)));
 
         Either<PricingError, BillingAmount> amountToBillE =
             linesE.map(lines ->
-                lines.map(line -> PricedOrderLines.getPrice(line))
+                lines.map(line -> PricedOrderLines.getLinePrice(line))
             ).flatMap(prices ->
                 BillingAmounts.sumPrices(prices)
-                    .mapLeft(ve -> PricingErrors.pricingError(ValidationErrors.getValidationError(ve)))
+                    .mapLeft(ve -> PricingErrors.pricingError(getValidationError(ve)))
             );
 
         return linesE.flatMap(lines ->
@@ -49,8 +50,7 @@ public interface PriceOrder
                     ValidatedOrders.getShippingAddress(validatedOrder),
                     ValidatedOrders.getBillingAddress(validatedOrder),
                     amountToBill,
-                    lines,
-                    ValidatedOrders.getPricingMethod(validatedOrder)
+                    lines
                 )
             )
         );
@@ -59,11 +59,14 @@ public interface PriceOrder
     private static Either<ValidationError, PricedOrderLine> toPricedOrderLine(
         GetProductPrice getProductPrice, ValidatedOrderLine validatedOrderLine) {
 
-        Double qty = OrderQuantities.caseOf(ValidatedOrderLines.getQuantity(validatedOrderLine))
+        Double qty =
+            OrderQuantities.caseOf(ValidatedOrderLines.getQuantity(validatedOrderLine))
             .UnitQuantity(uq -> Double.valueOf(UnitQuantities.getUnitQuantity(uq)))
             .KgQuantity(kq -> KilogramQuantities.getKgQuantity(kq));
 
-        Price price = getProductPrice.apply(ValidatedOrderLines.getProductCode(validatedOrderLine));
+        Price price =
+            getProductPrice.apply(ValidatedOrderLines.getProductCode(validatedOrderLine));
+
         Either<ValidationError, Price> linePriceE = price.multiply(qty);
 
         return linePriceE.map(linePrice -> PricedOrderLines.pricedOrderLine(

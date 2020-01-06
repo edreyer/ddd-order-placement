@@ -4,13 +4,10 @@ import org.derive4j.ArgOption;
 import org.derive4j.Data;
 
 @Data(arguments = ArgOption.checkedNotNull)
-public interface CustomerInfo {
+public interface HtmlString {
 
     interface Cases<R> {
-        R CustomerInfo(
-            PersonalName name,
-            EmailAddress email
-        );
+        R htmlString(String html);
     }
 
     <R> R match(Cases<R> cases);

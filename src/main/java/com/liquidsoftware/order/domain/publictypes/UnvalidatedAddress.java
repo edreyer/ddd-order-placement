@@ -13,9 +13,7 @@ public interface UnvalidatedAddress {
             String addressLine3,
             String addressLine4,
             String city,
-            String state,
-            String zipCode,
-            String country
+            String zipCode
         );
     }
 

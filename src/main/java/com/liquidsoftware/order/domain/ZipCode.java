@@ -1,14 +1,17 @@
-package com.liquidsoftware.order.domain.simpletypes;
+package com.liquidsoftware.order.domain;
 
-import io.vavr.control.Either;
+import java.util.function.Function;
+import java.util.regex.Pattern;
+
 import org.derive4j.Data;
 import org.derive4j.Derive;
 import org.derive4j.ExportAsPublic;
 import org.derive4j.FieldNames;
 import org.derive4j.Visibility;
 
-import java.util.function.Function;
-import java.util.regex.Pattern;
+import io.vavr.control.Either;
+
+import static com.liquidsoftware.order.domain.simpletypes.ConstrainedTypes.createLike;
 
 @Data(@Derive(withVisibility = Visibility.Smart))
 public abstract class ZipCode {
@@ -19,7 +22,7 @@ public abstract class ZipCode {
 
     @ExportAsPublic
     static Either<ValidationError, ZipCode> create(String zip) {
-        return ConstrainedTypes.createLike("zip", zip, Pattern.compile("\\d{5}"))
+        return createLike("zip", zip, Pattern.compile("\\d{5}"))
             .map(validZip -> ZipCodes.zipCode0(validZip));
     }
 

@@ -1,5 +1,6 @@
 package com.liquidsoftware.order.domain.simpletypes;
 
+import com.liquidsoftware.order.domain.ValidationError;
 import io.vavr.control.Either;
 import io.vavr.control.Option;
 import org.derive4j.Data;

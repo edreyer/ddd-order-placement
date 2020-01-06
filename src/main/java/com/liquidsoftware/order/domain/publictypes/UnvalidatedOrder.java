@@ -10,11 +10,10 @@ public interface UnvalidatedOrder {
     interface Cases<R> {
         R unvalidatedOrder(
             String orderId,
-            UnvalidatedCustomerInfo unvalidatedCustomerInfo,
+            UnvalidatedCustomerInfo customerInfo,
             UnvalidatedAddress shippingAddress,
             UnvalidatedAddress billingAddress,
-            List<UnvalidatedOrderLine> lines,
-            String promotionCode
+            List<UnvalidatedOrderLine> lines
         );
     }
 

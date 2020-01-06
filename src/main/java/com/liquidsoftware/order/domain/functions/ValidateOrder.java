@@ -1,9 +1,14 @@
 package com.liquidsoftware.order.domain.functions;
 
 import com.liquidsoftware.order.domain.Address;
+import com.liquidsoftware.order.domain.AddressValidationErrors;
 import com.liquidsoftware.order.domain.Addresses;
+import com.liquidsoftware.order.domain.CheckedAddress;
+import com.liquidsoftware.order.domain.CheckedAddresses;
 import com.liquidsoftware.order.domain.CustomerInfo;
 import com.liquidsoftware.order.domain.CustomerInfos;
+import com.liquidsoftware.order.domain.EmailAddress;
+import com.liquidsoftware.order.domain.EmailAddresses;
 import com.liquidsoftware.order.domain.OrderId;
 import com.liquidsoftware.order.domain.OrderIds;
 import com.liquidsoftware.order.domain.OrderLineId;
@@ -13,39 +18,28 @@ import com.liquidsoftware.order.domain.OrderQuantity;
 import com.liquidsoftware.order.domain.PersonalNames;
 import com.liquidsoftware.order.domain.ProductCode;
 import com.liquidsoftware.order.domain.ProductCodes;
-import com.liquidsoftware.order.domain.VipStatus;
-import com.liquidsoftware.order.domain.VipStatuses;
-import com.liquidsoftware.order.domain.internaltypes.AddressValidationErrors;
-import com.liquidsoftware.order.domain.internaltypes.CheckedAddress;
-import com.liquidsoftware.order.domain.internaltypes.PricingMethod;
-import com.liquidsoftware.order.domain.internaltypes.PricingMethods;
-import com.liquidsoftware.order.domain.internaltypes.ValidatedOrder;
-import com.liquidsoftware.order.domain.internaltypes.ValidatedOrderLine;
-import com.liquidsoftware.order.domain.internaltypes.ValidatedOrderLines;
-import com.liquidsoftware.order.domain.internaltypes.ValidatedOrders;
+import com.liquidsoftware.order.domain.ValidatedOrder;
+import com.liquidsoftware.order.domain.ValidatedOrderLine;
+import com.liquidsoftware.order.domain.ValidatedOrderLines;
+import com.liquidsoftware.order.domain.ValidatedOrders;
+import com.liquidsoftware.order.domain.ValidationError;
+import com.liquidsoftware.order.domain.ZipCode;
+import com.liquidsoftware.order.domain.ZipCodes;
 import com.liquidsoftware.order.domain.publictypes.UnvalidatedAddress;
-import com.liquidsoftware.order.domain.publictypes.UnvalidatedAddresses;
 import com.liquidsoftware.order.domain.publictypes.UnvalidatedCustomerInfo;
 import com.liquidsoftware.order.domain.publictypes.UnvalidatedCustomerInfos;
 import com.liquidsoftware.order.domain.publictypes.UnvalidatedOrder;
 import com.liquidsoftware.order.domain.publictypes.UnvalidatedOrderLine;
 import com.liquidsoftware.order.domain.publictypes.UnvalidatedOrderLines;
 import com.liquidsoftware.order.domain.publictypes.UnvalidatedOrders;
-import com.liquidsoftware.order.domain.simpletypes.EmailAddress;
-import com.liquidsoftware.order.domain.simpletypes.EmailAddresses;
 import com.liquidsoftware.order.domain.simpletypes.String50;
 import com.liquidsoftware.order.domain.simpletypes.String50s;
-import com.liquidsoftware.order.domain.simpletypes.UsStateCode;
-import com.liquidsoftware.order.domain.simpletypes.UsStateCodes;
-import com.liquidsoftware.order.domain.simpletypes.ValidationError;
-import com.liquidsoftware.order.domain.simpletypes.ZipCode;
-import com.liquidsoftware.order.domain.simpletypes.ZipCodes;
 import io.vavr.Function3;
 import io.vavr.collection.List;
 import io.vavr.control.Either;
 import io.vavr.control.Option;
 
-import static com.liquidsoftware.order.domain.simpletypes.ValidationErrors.validationError;
+import static com.liquidsoftware.order.domain.ValidationErrors.validationError;
 import static java.lang.String.format;
 
 /**
@@ -60,7 +54,12 @@ import static java.lang.String.format;
  *      Either<ValidationError, ValidatedOrder>
  */
 public interface ValidateOrder
-    extends Function3<CheckProductCodeExists, CheckAddressExists, UnvalidatedOrder, Either<ValidationError, ValidatedOrder>> {
+    extends Function3<
+        CheckProductCodeExists,
+        CheckAddressExists,
+        UnvalidatedOrder,
+        Either<ValidationError, ValidatedOrder>
+    > {
 
     ValidateOrder validateOrder =
         (checkProductCodeExists, checkAddressExists, unvalidatedOrder) -> {
@@ -69,7 +68,7 @@ public interface ValidateOrder
                 OrderIds.create(UnvalidatedOrders.getOrderId(unvalidatedOrder));
 
             Either<ValidationError, CustomerInfo> customerInfoE =
-                toCustomerInfo(UnvalidatedOrders.getUnvalidatedCustomerInfo(unvalidatedOrder));
+                toCustomerInfo(UnvalidatedOrders.getCustomerInfo(unvalidatedOrder));
 
             Either<ValidationError, Address> shippingAddressE =
                 toCheckedAddress(checkAddressExists, UnvalidatedOrders.getShippingAddress(unvalidatedOrder))
@@ -84,15 +83,12 @@ public interface ValidateOrder
                     .map(line -> toValidatedOrderLine(checkProductCodeExists, line)))
                 .map(seq -> seq.toList());
 
-            PricingMethod pricingMethod =
-                PricingMethods.create(Option.of(UnvalidatedOrders.getPromotionCode(unvalidatedOrder)));
-
             return orderIdE.flatMap(orderId ->
                 customerInfoE.flatMap(customerInfo ->
                 shippingAddressE.flatMap(shippingAddress ->
                 billingAddressE.flatMap(billingAddress ->
                 linesE.map(lines ->
-                    ValidatedOrders.validatedOrder(orderId, customerInfo, shippingAddress, billingAddress, lines, pricingMethod)
+                    ValidatedOrders.validatedOrder(orderId, customerInfo, shippingAddress, billingAddress, lines)
                 )))));
         };
 
@@ -113,8 +109,8 @@ public interface ValidateOrder
 
         return orderLineIdE.flatMap(orderLineId ->
             productCodeE.flatMap(productCode ->
-            quantityE.map(quantity -> ValidatedOrderLines.validatedOrderLine(
-                orderLineId, productCode, quantity)
+            quantityE.map(quantity ->
+                ValidatedOrderLines.validatedOrderLine(orderLineId, productCode, quantity)
             )));
     }
 
@@ -129,38 +125,30 @@ public interface ValidateOrder
     private static Either<ValidationError, Address> toAddress(CheckedAddress checkedAddress) {
 
         Either<ValidationError, String50> addressLine1E =
-            String50s.create(UnvalidatedAddresses.getAddressLine1(checkedAddress.toUnvalidated()));
+            String50s.create(CheckedAddresses.getAddressLine1(checkedAddress));
 
         Option<String50> addressLine2 =
-            String50s.createOption(UnvalidatedAddresses.getAddressLine1(checkedAddress.toUnvalidated()));
+            String50s.createOption(CheckedAddresses.getAddressLine1(checkedAddress));
 
         Option<String50> addressLine3 =
-            String50s.createOption(UnvalidatedAddresses.getAddressLine1(checkedAddress.toUnvalidated()));
+            String50s.createOption(CheckedAddresses.getAddressLine1(checkedAddress));
 
         Option<String50> addressLine4 =
-            String50s.createOption(UnvalidatedAddresses.getAddressLine1(checkedAddress.toUnvalidated()));
+            String50s.createOption(CheckedAddresses.getAddressLine1(checkedAddress));
 
         Either<ValidationError, String50> cityE =
-            String50s.create(UnvalidatedAddresses.getCity(checkedAddress.toUnvalidated()));
-
-        Either<ValidationError, UsStateCode> stateE =
-            UsStateCodes.create(UnvalidatedAddresses.getState(checkedAddress.toUnvalidated()));
+            String50s.create(CheckedAddresses.getCity(checkedAddress));
 
         Either<ValidationError, ZipCode> zipCodeE =
-            ZipCodes.create(UnvalidatedAddresses.getZipCode(checkedAddress.toUnvalidated()));
-
-        Either<ValidationError, String50> countryE =
-            String50s.create(UnvalidatedAddresses.getCountry(checkedAddress.toUnvalidated()));
+            ZipCodes.create(CheckedAddresses.getZipCode(checkedAddress));
 
         return addressLine1E.flatMap(line1 ->
             cityE.flatMap(city ->
-            stateE.flatMap(state ->
-            zipCodeE.flatMap(zip ->
-            countryE.map(country ->
+            zipCodeE.map(zip ->
                 Addresses.Address(
-                    line1, addressLine2, addressLine3, addressLine4, city, zip, state, country
+                    line1, addressLine2, addressLine3, addressLine4, city, zip
                 )
-            )))));
+            )));
     }
 
     private static Either<ValidationError, CheckedAddress> toCheckedAddress(
@@ -185,18 +173,13 @@ public interface ValidateOrder
         Either<ValidationError, EmailAddress> emailE =
             EmailAddresses.create(UnvalidatedCustomerInfos.getEmailAddress(uci));
 
-        Either<ValidationError, VipStatus> vipStatusE =
-            VipStatuses.fromString(UnvalidatedCustomerInfos.getVipStatus(uci));
-
         return firstNameE.flatMap(firstName ->
             lastNameE.flatMap(lastName ->
-            emailE.flatMap(email ->
-            vipStatusE.map(vipStatus ->
-                CustomerInfos.CustomerInfo(
-                    PersonalNames.PersonalName(firstName, lastName),
-                    email,
-                    vipStatus
-                )
-            ))));
+            emailE.map(email ->
+                    CustomerInfos.CustomerInfo(
+                        PersonalNames.PersonalName(firstName, lastName),
+                        email
+                    )
+            )));
     }
 }
