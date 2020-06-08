@@ -21,7 +21,7 @@ public abstract class GizmoCode {
 
     @ExportAsPublic
     static Either<ValidationError, GizmoCode> create(String gizmoCode) {
-        return createLike("gizmoCode", gizmoCode, Pattern.compile("W\\d{4}"))
+        return createLike("gizmoCode", gizmoCode, Pattern.compile("G\\d{5}"))
             .map(gc -> GizmoCodes.gizmoCode0(gc));
     }
 }
